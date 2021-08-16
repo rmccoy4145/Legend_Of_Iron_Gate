@@ -1,0 +1,150 @@
+#include <SFML/Graphics.hpp>
+#include "ResourcePath.hpp"
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include "player.h"
+#include "world.h"
+#include "update.h"
+
+
+
+
+
+int mainback()
+{
+    
+    
+    bool leftPressed(false);
+    bool rightPressed(false);
+    bool spacePressed(false);
+    Textures textures;
+    Sounds sounds;
+    Update Physics;
+    EntityContainer eContainer;
+    LevelContainer lContainer;
+    EnemyContainer enemyContainer;
+    Player player;
+    sf::Vector2f spawnLocation(500, 100);
+    std::unique_ptr<Enemy> enemy1(new Zombie(spawnLocation));
+    enemyContainer.EnemyVector.push_back(std::move(enemy1));
+    Ground Block(*textures.ground);
+    for (int i = 0, x = 400; i < 800; i += 61)
+    {
+        /*
+        if (x < 400)
+        {
+            i = 732;
+            x += 61;
+        }
+         */
+        if (i == 793 )
+        {
+            i = 0;
+            x += 61;
+        }
+        Block.mSprite.setPosition(i, x);
+        lContainer.LevelVector.push_back(Block);
+        
+        if (x > 600 )
+        {
+            break;
+        }
+    }
+    
+    
+    //Creating game window
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Legend of IronGate");
+    
+    //set famerate to 60 FPS
+    window.setFramerateLimit(60);
+    
+    window.setKeyRepeatEnabled(false);
+    
+    sf::Event event;
+    
+    //variable that keeps game loop running
+    bool play = true;
+    //Game Loop
+    while (play == true)
+    {
+        
+        //Events
+        
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Left)
+                leftPressed = true;
+            else if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Left)
+                leftPressed = false;
+            
+            
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Right)
+                rightPressed = true;
+            if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Right)
+                rightPressed = false;
+
+            
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+            {
+                spacePressed = true;
+                player.mAction = 1;
+            }
+            if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space)
+                spacePressed = false;
+            
+            if (event.type == sf::Event::Closed)
+            {
+                return 0;
+            }
+            
+            
+        }
+        
+        //LOGIC-----------------------------------------------------------------------------------------------------
+        
+        std::cout << "SpriteVector is..." << eContainer.SpriteVector.size() << "\n";
+        
+        //Player Movements
+        
+
+
+        Physics.AddObjects(lContainer, eContainer, enemyContainer, player, textures, sounds);
+        Physics.RemoveObjects(lContainer, eContainer, enemyContainer, player, textures);
+        Physics.Updates(lContainer, eContainer, enemyContainer, player, textures);
+        
+        player.Animations();
+        player.Movements(leftPressed, rightPressed, lContainer, spacePressed);
+        //RENDERING
+        window.clear();
+        for (unsigned int i = 0; i < eContainer.SpriteVector.size(); i++)
+        {
+            if (eContainer.SpriteVector[i]->mSprite.getPosition().y <= 600 && eContainer.SpriteVector[i]->isAlive == true)
+            {
+                window.draw(eContainer.SpriteVector[i]->mSprite);
+            }
+
+        }
+        
+        for (unsigned int i = 0; i < enemyContainer.EnemyVector.size(); i++)
+        {
+            if (enemyContainer.EnemyVector[i]->mSprite.getPosition().y <= 600 && enemyContainer.EnemyVector[i]->isAlive == true)
+            {
+                window.draw(enemyContainer.EnemyVector[i]->mSprite);
+            }
+            
+        }
+        
+        for (unsigned int i = 0; i < lContainer.LevelVector.size(); i++)
+        {
+            window.draw(lContainer.LevelVector[i].mSprite);
+        }
+        
+        window.draw(player.ReturnSprite());
+        window.display();
+    }
+    
+    //Clean Up
+    window.close();
+    return 0;
+}
