@@ -2,4 +2,4 @@
 
 ***!!Old Project!!**
 
-A cpp 2D sidescrolling game which utilizes the SFML Graphics Library.
+A 2D sidescrolling game which utilizes the SFML Graphics Library done in cpp.
